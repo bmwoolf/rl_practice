@@ -5,9 +5,9 @@
 #define PLAYER_X 1
 #define PLAYER_0 2
 
-int board[9]; // 0-8 = positions in memory
+// the game board- stores the current snapshot of the board
+int board[9]; 
 
-// the q-table- big array indexed by board_hash(board)
+// the q-table- stores learned move values
+// 3 choices of move (empty, X, O) * 9 cells = 3^9 possible states = 19683
 float qtable[19683][9];
-          // 3 choices * 9 cells = 3^9 possible states = 19683
-          // (empty, X, O)
