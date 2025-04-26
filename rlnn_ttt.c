@@ -45,12 +45,7 @@ int random_move() {
     return moves[rand() % counts];
 }
 
-// turn the entire board into a single unique number and use 
-// that number as an index in the qtable
-// every possible board configuration needs its own row in the qtable
-// lets us find where the q-values for this exact board are stored
-    // when selecting a move -> read from the qtable[board_hash(board)]
-    // when learning -> you write to qtable[board_hash(board)]
+// hash the whole board for storing as a vector in the q table as one q value
 int board_hash(int *b) {
     int h = 0;
     for (int i = 0; i < 9; i ++) {
@@ -62,4 +57,22 @@ int board_hash(int *b) {
 // places a move on the board
 void make_move(int pos, int player) {
     board[pos] = player;
+}
+
+// checks if a player has 3 in a row
+int is_winner(int player) {
+    // rows 
+    if (board[0] == player && board[1] == player && board[2] == player) return 1;
+    if (board[3] == player && board[4] == player && board[5] == player) return 1;
+    if (board[6] == player && board[7] == player && board[8] == player) return 1;
+    
+    // columns
+    if (board[0] == player && board[3] == player && board[6] == player) return 1;
+    if (board[1] == player && board[4] == player && board[7] == player) return 1;
+    if (board[2] == player && board[5] == player && board[8] == player) return 1;
+    
+    // diagonals
+    if (board[0] == player && board[4] == player && board[8] == player) return 1;
+    if (board[2] == player && board[4] == player && board[6] == player) return 1;
+    return 0;
 }
