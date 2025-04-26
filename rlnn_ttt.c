@@ -1,4 +1,8 @@
-// TicTacToe in C, with 2 RL agents playing against each other
+// TicTacToe in C, with 2 RL agents playing against each other to train
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 // the board- array of 9 integers
 #define EMPTY 0
@@ -25,7 +29,7 @@ void print_board() {
     for (int i = 0; i < 9; i++) {
         if (board[i] == PLAYER_X) printf("X");
         else if (board[i] == PLAYER_O) printf("0");
-        else print(".");
+        else printf(".");
 
         // agent scans left to right, until they run out of rows
         // then drops to the next row
@@ -42,7 +46,7 @@ int random_move() {
         if (board[i] == EMPTY) moves[count++] = i;
     }
     if (count == 0) return -1;
-    return moves[rand() % counts];
+    return moves[rand() % count];
 }
 
 // hash the whole board for storing as a vector in the q table as one q value
@@ -111,7 +115,7 @@ int select_move(int player) {
     }
 
     // fallback: if somehow no best move found, pick random
-    if (best_move == -1) return random_move()
+    if (best_move == -1) return random_move();
     return best_move;
 }
 
@@ -119,7 +123,7 @@ int select_move(int player) {
 // gamme- balance between immediate reward and future possibilities
 void learn(int old_board[9], int move, int reward) {
     int old_hash = board_hash(old_board);
-    int new_hash = board_hash(new_board);
+    int new_hash = board_hash(board);
 
     // find the best future q value after the move 
     float max_future_q = -1e9;
@@ -139,12 +143,12 @@ void learn(int old_board[9], int move, int reward) {
     float gamma = 0.9; // discount factor
 
     // update the q value
-    qtable[old_hash][move] += alpha * (reward + gamma * max_feature_q - qtable[old_hash][move]);
+    qtable[old_hash][move] += alpha * (reward + gamma * max_future_q - qtable[old_hash][move]);
 }
 
 // play millions of games to train the model
 void train(int episodes) {
-    for (int episode = 0; episode < episodes, episode++) {
+    for (int episode = 0; episode < episodes; episode++) {
         reset_board();
         int current_player = PLAYER_X;
 
@@ -189,11 +193,11 @@ void play() {
             int move;
             printf("Enter your move (0-8): ");
             scanf("%d", &move);
-            if (move < 0 || move > 8 || board[move != EMPTY]) {
+            if (move < 0 || move > 8 || board[move] != EMPTY) {
                 printf("Invalid move. Try again.\n");
                 continue;
             }
-            make_move(move, PLAYER_X)
+            make_move(move, PLAYER_X);
         } else {
             int move = select_move(PLAYER_O);
             printf("AI plays at %d\n", move);
