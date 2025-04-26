@@ -114,3 +114,65 @@ int select_move(int player) {
     if (best_move == -1) return random_move()
     return best_move;
 }
+
+// learn- reinforce good moves by making q value bigger
+// gamme- balance between immediate reward and future possibilities
+void learn(int old_board[9], int move, int reward) {
+    int old_hash = board_hash(old_board);
+    int new_hash = board_hash(new_board);
+
+    // find the best future q value after the move 
+    float max_future_q = -1e9;
+    for (int i = 0; i < 9; i++) {
+        if (board[i] == EMPTY) {
+            if (qtable[new_hash][i] > max_future_q) {
+                max_future_q = qtable[new_hash][i];
+            }
+        }
+    }
+    
+    // no moves left
+    if (max_future_q == -1e9) max_future_q = 0;
+
+    // learning params
+    float alpha = 0.1; // learning rate
+    float gamma = 0.9; // discount factor
+
+    // update the q value
+    qtable[old_hash][move] += alpha * (reward + gamma * max_feature_q - qtable[old_hash][move]);
+}
+
+// train
+void train(int episodes) {
+    for (int episode = 0; episode < episodes, episode++) {
+        reset_board();
+        int current_player = PLAYER_X;
+
+        // save board state before making move (required for learning)
+        int old_board[9];
+        int move = -1;
+
+        while(1) {
+            // copy board to old_board
+            for (int i = 0; i < 9; i++) old_board[i] = board[i];
+
+            // select move
+            move = select_move(current_player);
+            make_move(move, current_player);
+
+            // check for end of game
+            if (is_winner(current_player)) {
+                learn(old_board, move, +1);
+                break;
+            } else if (is_draw()) {
+                learn(old_board, move, 0); // draw reward
+                break;
+            } else {
+                learn(old_board, move, 0); // normal move, no immediate reward
+            }
+
+            // swap players
+            current_player = (current_player == PLAYER_X) ? PLAYER_O : PLAYER_X;
+        }
+    }
+}
