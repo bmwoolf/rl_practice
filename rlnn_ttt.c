@@ -88,3 +88,29 @@ int is_draw() {
     return 1;
 }
 
+// RL logic
+// ai picks a move
+int select_move(int player) {
+    if ((rand() % 100) < 20) {
+        // 20% chance- random move 
+        return random_move();
+    }
+
+    // 80% chance- pick the best move based on the q table
+    int best_move = -1;
+    float best_q = -1e9; // very small number to start
+    int h = board_hash(board);
+
+    for (int i = 0; i < 9; i++) {
+        if (board[i] == EMPTY) {
+            if (qtable[h][i] > best_q) {
+                best_q = qtable[h][i];
+                best_move = i;
+            }
+        }
+    }
+
+    // fallback: if somehow no best move found, pick random
+    if (best_move == -1) return random_move()
+    return best_move;
+}
