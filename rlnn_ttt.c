@@ -215,3 +215,11 @@ void play() {
         current_player = (current_player == PLAYER_X) ? PLAYER_O : PLAYER_X;
     }
 }
+
+// initialize the game
+int main() {
+    srand(time(NULL));  // init rng
+    train(500000);      // train ai
+    play();             // play against ai
+    return 0;
+}
