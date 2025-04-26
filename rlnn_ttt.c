@@ -3,7 +3,7 @@
 // the board- array of 9 integers
 #define EMPTY 0
 #define PLAYER_X 1
-#define PLAYER_0 2
+#define PLAYER_O 2
 
 // the game board- stores the current snapshot of the board
 int board[9]; 
@@ -24,7 +24,7 @@ void reset_board() {
 void print_board() {
     for (int i = 0; i < 9; i++) {
         if (board[i] == PLAYER_X) printf("X");
-        else if (board[i] == PLAYER_0) printf("0");
+        else if (board[i] == PLAYER_O) printf("0");
         else print(".");
 
         // agent scans left to right, until they run out of rows
@@ -142,7 +142,7 @@ void learn(int old_board[9], int move, int reward) {
     qtable[old_hash][move] += alpha * (reward + gamma * max_feature_q - qtable[old_hash][move]);
 }
 
-// train
+// play millions of games to train the model
 void train(int episodes) {
     for (int episode = 0; episode < episodes, episode++) {
         reset_board();
@@ -174,5 +174,44 @@ void train(int episodes) {
             // swap players
             current_player = (current_player == PLAYER_X) ? PLAYER_O : PLAYER_X;
         }
+    }
+}
+
+// human vs trained ai
+void play() {
+    reset_board();
+    int current_player = PLAYER_X; // human = X, ai = O
+
+    while (1) {
+        print_board();
+
+        if (current_player == PLAYER_X) {
+            int move;
+            printf("Enter your move (0-8): ");
+            scanf("%d", &move);
+            if (move < 0 || move > 8 || board[move != EMPTY]) {
+                printf("Invalid move. Try again.\n");
+                continue;
+            }
+            make_move(move, PLAYER_X)
+        } else {
+            int move = select_move(PLAYER_O);
+            printf("AI plays at %d\n", move);
+            make_move(move, PLAYER_O);
+        }
+
+        if (is_winner(current_player)) {
+            print_board();
+            if (current_player == PLAYER_X) printf("You win!\n");
+            else printf("AI wins!\n");
+            break;
+        } else if (is_draw()) {
+            print_board();
+            printf("It's a draw!\n");
+            break;
+        }
+
+        // switch player
+        current_player = (current_player == PLAYER_X) ? PLAYER_O : PLAYER_X;
     }
 }
