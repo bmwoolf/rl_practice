@@ -76,3 +76,15 @@ int is_winner(int player) {
     if (board[2] == player && board[4] == player && board[6] == player) return 1;
     return 0;
 }
+
+// check if the board is full, but no one won
+int is_draw() {
+    // scan all 9 cells
+    for (int i = 0; i < 9; i++) {
+        // if any are empty, no draw yet -> return 0
+        if (board[i] == EMPTY) return 0; // still moves left
+    }
+    // if none are empty, return 1 for draw
+    return 1;
+}
+
