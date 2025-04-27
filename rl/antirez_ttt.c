@@ -112,7 +112,7 @@ void softmax(float *input, float *output, int size) {
 
 // forward pass (inference)
 // called when the agent needs to decide a move
-void forward(NeuralNetwork *nn, float *inputs) {
+void forward_pass(NeuralNetwork *nn, float *inputs) {
     // copy inputs
     memcpy(nn->inputs, inputs, NN_INPUT_SIZE * sizeof(float));
 
@@ -137,10 +137,29 @@ void forward(NeuralNetwork *nn, float *inputs) {
     softmax(nn->raw_logits, nn->outputs, NN_OUTPUT_SIZE);
 }
 
-// decision making (best_move, picking actions, update_q)
+void init_game(Gamestate, *state) {
+    memset(state->board)
+}
 
+void display_board()
 
-// pretraining (update_q, reward backpropogation)
+void board_to_inputs()
 
+int check_game_over()
 
-// trigger loop (main game loop, training multiple games)
+int get_computer_move()
+
+void backprop()
+
+void learn_from_game()
+
+void play_game()
+
+int get_random_move()
+
+char play_random_game()
+
+void train_against_random()
+
+int main()
+
