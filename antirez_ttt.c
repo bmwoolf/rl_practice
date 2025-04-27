@@ -80,7 +80,62 @@ void init_neural_network(NeuralNetwork *nn) {
     }
 }
 
+// apply softmax to an array input, set the result to outputs
+void softmax(float *input, float *output, int size) {
+    // find max value then subtract it to avoid stability issues with exp()
+    float max_val = input[0];
+    for (int i = 1; i < size; i++) {
+        if (input[i] > max_val) {
+            max_val = input[i];
+        }
+    }
 
+    // calc exp(x_i - max) for each element and sum
+    float sum = 0.0f;
+    for (int i = 1; i < size; i++) {
+        output[i] = expf(input[i] - max_val);
+        sum += output[i];
+    }
+
+    // normalize to get probabilities
+    if (sum > 0) {
+        for (int i = 0; i < size; i++) {
+            output[i] /= sum;
+        }
+    } else {
+        // fallback in case of numberical issues, provide uniform distribution/equal probability
+        for (int i = 0; i < size; i++) {
+            output[i] = 1.0f / size;
+        }
+    }
+}
+
+// forward pass (inference)
+// called when the agent needs to decide a move
+void forward(NeuralNetwork *nn, float *inputs) {
+    // copy inputs
+    memcpy(nn->inputs, inputs, NN_INPUT_SIZE * sizeof(float));
+
+    // input to hidden layer
+    for (int i = 0; i < NN_HIDDEN_SIZE; i++) {
+        float sum = nn->biases_h[i];
+        for (int j = 0; j < NN_INPUT_SIZE; j++) {
+            sum += inputs[j] * nn->weights_ih[j * NN_HIDDEN_SIZE + i];
+        }
+        nn->hidden[i] = relu(sum);
+    }
+
+    // hidden to output layer (raw logits)
+    for (int i = 0; i < NN_OUTPUT_SIZE; i++) {
+        nn->raw_logits[i] = nn->biases_o[i];
+        for (int j = 0; j < NN_HIDDEN_SIZE; j++) {
+            nn->raw_logits[i] += nn->hidden[j] * nn->weights_ho[j * NN_OUTPUT_SIZE + i];
+        }
+    }
+
+    // apply softmax to get probabilities
+    softmax(nn->raw_logits, nn->outputs, NN_OUTPUT_SIZE);
+}
 
 // decision making (best_move, picking actions, update_q)
 
