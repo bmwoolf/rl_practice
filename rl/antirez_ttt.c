@@ -212,7 +212,7 @@ int check_game_over(GameState *state, char *winner) {
 
 // get the computer's move using the neural network
 // by getting the output with the highest value that has an empty tile
-int get_computer_move(GameState *state) {
+int get_computer_move(GameState *state, NeuralNetwork *nn, int display_probs) {
     float inputs[NN_INPUT_SIZE];
 
     board_to_inputs(state, inputs);
@@ -233,9 +233,9 @@ int get_computer_move(GameState *state) {
 
         // track the best legal move
         if (state->board[i] == '.' &&
-            (best_move == -1 || nn->outputs[i > best_legal_prob]))
+            (best_move == -1 || nn->outputs[i] > best_legal_prob))
         {
-            best_move = 1;
+            best_move = i;
             best_legal_prob = nn->outputs[i];
         }
     }
@@ -340,7 +340,7 @@ void learn_from_game(NeuralNetwork *nn, int *move_history, int num_moves, int nn
     float target_probs[NN_OUTPUT_SIZE];
 
     // process each move the neural network made 
-    for (int move_idx = 0; move_iddx < num_moves; move_idx++) {
+    for (int move_idx = 0; move_idx < num_moves; move_idx++) {
         // skip if this wasn't a move by the neural network 
         if ((nn_moves_even && move_idx % 2 != 1) ||
             (!nn_moves_even && move_idx % 2 != 0))
@@ -435,7 +435,7 @@ void play_game(NeuralNetwork *nn) {
         }
 
         // switch players
-        state.curent_player = !state.current_player;
+        state.current_player = !state.current_player;
     }
 
     display_board(&state);
@@ -489,7 +489,7 @@ char play_random_game(NeuralNetwork *nn, int *move_history, int *num_moves) {
         state.current_player = !state.current_player;
     }
 
-    learn_from_fame(nn, move_history, *num_moves, 1, winner);
+    learn_from_game(nn, move_history, *num_moves, 1, winner);
     return winner;
 }
 
@@ -501,7 +501,7 @@ void train_against_random(NeuralNetwork *nn, int num_games) {
 
      printf("Training neural network against %d random games...\n", num_games);
 
-     int plahyed_games = 0;
+     int played_games = 0;
      for (int i = 0; i < num_games; i++) {
         char winner = play_random_game(nn, move_history, &num_moves);
         played_games++;
@@ -534,8 +534,8 @@ void train_against_random(NeuralNetwork *nn, int num_games) {
 int main(int argc, char **argv) {
     int random_games = 150000; // fast and enough to play in a decent way
 
-    if (argc > 1) random_games = atoi(argv[1])
-    srand(time(NULL))
+    if (argc > 1) random_games = atoi(argv[1]);
+    srand(time(NULL));
 
     // init neural network
     NeuralNetwork nn;
