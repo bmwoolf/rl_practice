@@ -393,6 +393,7 @@ void learn_from_game(NeuralNetwork *nn, int *move_history, int num_moves, int nn
     }
 }
 
+// play one game of TTT against the neural network
 void play_game(NeuralNetwork *nn) {
     GameState state;
     char winner;
@@ -451,11 +452,84 @@ void play_game(NeuralNetwork *nn) {
     learn_from_game(nn, move_history, num_moves, 1, winner);
 }
 
-int get_random_move()
+// get random valid move, used for training against a random opponent
+// will loop forever if the board is full, but made this way for short term simplicity
+int get_random_move(GameState *state) {
+    while(1) {
+        int move = rand() % 9;
+        if (state->board[move] != '.') continue;
+        return move;
+    }
+}
 
-char play_random_game()
+// play against random moves and learn from it
+// monte carlo method applied to reinforcement learning
+char play_random_game(NeuralNetwork *nn, int *move_history, int *num_moves) {
+    GameState state;
+    char winner = 0;
+    *num_moves = 0;
 
-void train_against_random()
+    init_game(&state);
+
+    while (!check_game_over(&state, &winner)) {
+        int move;
+
+        if (state.current_player == 0) { // random player's turn (X)
+            move = get_random_move(&state);
+        } else { // neural networks turn
+            move = get_computer_move(&state, nn, 0);
+        }
+
+        // make the move and store it for the learning stage
+        char symbol = (state.current_player == 0) ? 'X' : 'O';
+        state.board[move] = symbol;
+        move_history[(*num_moves)++] = move;
+
+        // switch player
+        state.current_player = !state.current_player;
+    }
+
+    learn_from_fame(nn, move_history, *num_moves, 1, winner);
+    return winner;
+}
+
+// train the neural network against random moves
+void train_against_random(NeuralNetwork *nn, int num_games) {
+    int move_history[9];
+    int num_moves;
+    int wins = 0, losses = 0, ties = 0;
+
+     printf("Training neural network against %d random games...\n", num_games);
+
+     int plahyed_games = 0;
+     for (int i = 0; i < num_games; i++) {
+        char winner = play_random_game(nn, move_history, &num_moves);
+        played_games++;
+
+        // accumulate statistics that are provided to the user
+        if (winner == 'O') {
+            wins++; // neural network won
+        } else if (winner == 'X') {
+            losses++; // random player won
+        } else {
+            ties++; // tie
+        }
+
+        // show progress every 10,000 games
+        if ((i + 1) % 10000 == 0) {
+            printf("Games: %d, Wins: %d (%.1f%%), "
+                   "Losses: %d (%.1f%%), Ties: %d (%.1f%%)\n",
+                  i + 1, wins, (float)wins * 100 / played_games,
+                  losses, (float)losses * 100 / played_games,
+                  ties, (float)ties * 100 / played_games);
+            played_games = 0;
+            wins = 0;
+            losses = 0;
+            ties = 0;
+        }
+     }
+     printf("\nTraining complete!\n");
+}
 
 int main()
 
