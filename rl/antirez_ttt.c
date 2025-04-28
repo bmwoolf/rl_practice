@@ -322,9 +322,134 @@ void backprop(NeuralNetwork *nn, float *target_probs, float learning_rate, float
 
 }
 
-void learn_from_game()
+// train the neural network based on the game outcome
+void learn_from_game(NeuralNetwork *nn, int *move_history, int num_moves, int nn_moves_even, char winner) {
+    // determine reward based on game outcome
+    float reward;
+    char nn_symbol = nn_moves_even ? 'O' : 'X';
 
-void play_game()
+    if (winner == 'T') {
+        reward = 0.3f; // small reward for draw 
+    } else if (winner = nn_symbol) {
+        reward = 1.0f; // large reward for win
+    } else {
+        reward = -2.0f; // negative reward for loss
+    }
+
+    GameState state;
+    float target_probs[NN_OUTPUT_SIZE];
+
+    // process each move the neural network made 
+    for (int move_idx = 0; move_iddx < num_moves; move_idx++) {
+        // skip if this wasn't a move by the neural network 
+        if ((nn_moves_even && move_idx % 2 != 1) ||
+            (!nn_moves_even && move_idx % 2 != 0))
+        {
+            continue;
+        }
+
+        // recreate the board state before this move was made
+        init_game(&state);
+        for (int i = 0; i < move_idx; i++) {
+            char symbol = (i % 2 == 0) ? 'X' : 'O';
+            state.board[move_history[i]] = symbol;
+        }
+
+        // convert the board to inputs and forward pass 
+        float inputs[NN_INPUT_SIZE];
+        board_to_inputs(&state, inputs);
+        forward_pass(nn, inputs);
+
+        // reward neural network
+        int move = move_history[move_idx];
+
+        // scale the reward according to the move time, 
+        // so that later moves are more impacted
+        float move_importance = 0.5f + 0.5f * (float)move_odx/(float)num_moves;
+        float scaled_reward = reward * move_importance;
+
+        // create target probabilities distribution
+        for (int i = 0; i < NN_OUTPUT_SIZE; i++) {
+            target_probs[i] = 0;
+        }
+
+        // set the target for the chosen move based on reward
+        if (scaled_reward >= 0) {
+            // positive reward- set probability of the chosen move to 1
+            target_probs[move] = 1;
+        } else {
+            // negative reward- distribute proability to other valid moves
+            int valid_moves_left = 9-move_idx-1;
+            float other_prob = 1.0f / valid_moves_left;
+            for (int i = 0; i < 9; i++) {
+                if (state.board[i] == '.' && i != move) {
+                    target_probs[i] = other_prob;
+                }
+            }
+        }
+
+        // call the generic backprop function, using out target logits as the target
+        backprop(nn, target_probs, LEARNING_RATE, scaled_reward);
+    }
+}
+
+void play_game(NeuralNetwork *nn) {
+    GameState state;
+    char winner;
+    int move_history[9];
+    int num_moves = 0;
+
+    init_game(&state);
+
+    printf("Welcome to Tic Tac Toe! You are X, the computer is O.\n");
+    printf("Enter positions as numbers from 0 to 8 (see picture).\n");
+
+    // main game loop that keeps  playing until the game is over
+    while (!check_game_over(&state, &winner)) {
+        display_board(&state);
+
+        if (state.current_player == 0) {
+            // human
+            int move;
+            char movec;
+            printf("Your move (0-8): ");
+            scanf(" %c", &movec);
+            move = movec-'0'; // turn character into number
+
+            // check if move is valid
+            if (move < 0 || move > 8 || state.board[move] != '.') {
+               printf("Invalid move! Try again.\n");
+               continue;
+            }
+
+            state.board[move] = 'X';
+            move_history[num_moves++] = move;
+        } else {
+            // computer's turn
+            printf("Computer's move:\n");
+            int move = get_computer_move(&state, nn, 1);
+            state.board[move] = 'O';
+            printf("Computer placed O at position %d\n", move);
+            move_history[num_moves++] = move;
+        }
+
+        // switch players
+        state.curent_player = !state.current_player;
+    }
+
+    display_board(&state);
+
+    if (winner == 'X') {
+        printf("You win!\n");
+    } else if (winner == 'O') {
+        printf("Computer wins!\n");
+    } else {
+        printf("It's a tie!\n");
+    }
+
+    // learn from this game
+    learn_from_game(nn, move_history, num_moves, 1, winner);
+}
 
 int get_random_move()
 
