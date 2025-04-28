@@ -2,6 +2,7 @@
 
 ## Compile and run
 ```
-gcc rlnn_ttt.c -o rlnn_ttt
-./rlnn_ttt
+cd rl
+gcc antirez_ttt.c -o antirez_ttt
+./antirez_ttt
 ```
