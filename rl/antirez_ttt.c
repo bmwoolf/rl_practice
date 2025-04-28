@@ -272,27 +272,29 @@ int get_computer_move(GameState *state) {
 }
 
 // backpropagation function
+// called backprop because it works backwards from the output layer to the input layer, adjusting each layers weights based on how much they contributed to the error 
 void backprop(NeuralNetwork *nn, float *target_probs, float learning_rate, float reward_scaling) {
     float output_deltas[NN_OUTPUT_SIZE];
     float hidden_deltas[NN_HIDDEN_SIZE];
 
     /** #1: COMPUTE DELTAS */
-    // calculate output layer deltas- using softmax as output function and cross entropy as loss
-    // but using progress in terms of winning the game as cross entropy
+    // compute all output layer deltas using softmax as the output function and cross entropy as loss, but using progress in terms of winning the game as cross entropy
     // output[i] - target[i] is exactly what would happen if you derivate the deltas with softmax and cross entropy
     for (int i = 0; i < NN_OUTPUT_SIZE; i++) {
         output_deltas[i] = (nn->outputs[i] - target_probs[i]) * fabsf(reward_scaling);
     }
 
-    // backprop error to hidden layer
-    for (int = 0; i < NN_HIDDEN_SIZE; i++) {
+    // backprop error to hidden layer (compute all hidden deltas at once)
+    for (int i = 0; i < NN_HIDDEN_SIZE; i++) {
         float error = 0;
         for (int j = 0; j < NN_OUTPUT_SIZE; j++) {
             error += output_deltas[j] * nn->weights_ho[i * NN_OUTPUT_SIZE + j];
         }
-        hidden_deltas[i] = error * relu_activation(nn->hidden[i]);
+        hidden_deltas[i] = error * relu_derivative(nn->hidden[i]);
     }
+
     /** #2: WEIGHTS UPDATING */
+    // update output layer weights
     for (int i = 0; i < NN_HIDDEN_SIZE; i++) {
         for (int j = 0; j < NN_OUTPUT_SIZE; j++) {
             nn->weights_ho[i * NN_OUTPUT_SIZE + j] -= 
@@ -300,17 +302,20 @@ void backprop(NeuralNetwork *nn, float *target_probs, float learning_rate, float
         }
     }
 
+    // update output layer biases
     for (int j = 0; j < NN_OUTPUT_SIZE; j++) {
         nn->biases_o[j] -= learning_rate * output_deltas[j];
     }
 
-    // hidden layer weights and biases
+    // update hidden layer weights
     for (int i = 0; i < NN_HIDDEN_SIZE; i++) {
         for (int j = 0; j < NN_HIDDEN_SIZE; j++) {
-            nn->weights_ih[i * NN_HIDDEN_SIZE + j] -= learning_rate * hidden_deltas[j] * nn->inputs[i];
+            nn->weights_ih[i * NN_HIDDEN_SIZE + j] -= 
+                learning_rate * hidden_deltas[j] * nn->inputs[i];
         }
     }
 
+    // update hidden layer biases
     for (int j = 0; j < NN_HIDDEN_SIZE; j++) {
         nn->biases_h[j] -= learning_rate * hidden_deltas[j];
     }
