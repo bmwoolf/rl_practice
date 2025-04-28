@@ -531,5 +531,30 @@ void train_against_random(NeuralNetwork *nn, int num_games) {
      printf("\nTraining complete!\n");
 }
 
-int main()
+int main(int argc, char **argv) {
+    int random_games = 150000; // fast and enough to play in a decent way
+
+    if (argc > 1) random_games = atoi(argv[1])
+    srand(time(NULL))
+
+    // init neural network
+    NeuralNetwork nn;
+    init_neural_network(&nn);
+
+    // train against random moves
+    if (random_games > 0) train_against_random(&nn, random_games);
+
+    // play game with human and learn more 
+    while(1) {
+        char play_again;
+        play_game(&nn);
+
+        printf("Play again? (y/n): ");
+        scanf(" %c", &play_again);
+
+        if (play_again != 'y' && play_again != 'Y') break;
+    }
+
+    return 0;
+}
 
